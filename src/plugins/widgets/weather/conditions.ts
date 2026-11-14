@@ -2,9 +2,9 @@
 export interface Conditions {
   timestamp: number;
   temperature: number;
-  apparentTemperature: number;
-  humidity: number;
-  weatherCode: number;
+  apparentTemperature: number | null;
+  humidity: number | null;
+  weatherCode?: number;
 }
 
 /** Find conditions for the current time */
