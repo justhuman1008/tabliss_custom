@@ -26,7 +26,7 @@ async function getQuoteOfTheDay(category?: string) {
 
   if (res.status === 429) {
     return {
-      author: body.error.message.split(".")[1] + ".",
+      author: body.error?.message?.split(".")[1]?.trim() ?? undefined,
       quote: "Too many requests this hour.",
     };
   }
@@ -57,7 +57,7 @@ async function getBibleVerse() {
 
   if (res.status === 429) {
     return {
-      author: body.error.message.split(".")[1] + ".",
+      author: body.error?.message?.split(".")[1]?.trim() ?? undefined,
       quote: "Too many requests this hour.",
     };
   }
@@ -86,16 +86,15 @@ export async function getQuote(
 ): Promise<Quote> {
   loader.push();
 
-  const data =
+  const data = await (
     category === "developerexcuses"
-      ? await getDeveloperExcuse()
+      ? getDeveloperExcuse()
       : category === "bible"
-        ? await getBibleVerse()
-        : await getQuoteOfTheDay(category);
+        ? getBibleVerse()
+        : getQuoteOfTheDay(category)
+  ).finally(loader.pop);
 
-  loader.pop();
-
-  const quote = cleanQuote(data.quote);
+  const quote = cleanQuote(typeof data.quote === "string" ? data.quote : "");
 
   return {
     ...data,
@@ -107,6 +106,7 @@ export async function getQuote(
 function cleanQuote(quote: string) {
   // We remove whitespaces at the beginning and the end of the quote.
   quote = quote.trim();
+  if (!quote) return "";
 
   // We change all straight quotes (' and ") following a non-whitespace character by
   // a closing curvy quote (’).

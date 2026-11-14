@@ -1,5 +1,5 @@
 import React from "react";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import { UiContext } from "../../contexts/ui";
 import { exportStore, importStore, resetStore } from "../../db/action";
 import { useKeyPress } from "../../hooks";
@@ -14,10 +14,24 @@ import Widgets from "./Widgets";
 const Settings: React.FC = () => {
   const { toggleSettings } = React.useContext(UiContext);
 
+  const { formatMessage } = useIntl();
+  const importError = () =>
+    alert(
+      formatMessage({
+        id: "settings.import.failure",
+        defaultMessage:
+          "Could not import settings. Select a Tabliss backup file.",
+      }),
+    );
+
   const handleReset = () => {
     if (
       confirm(
-        "Are you sure you want to delete all of your Tabliss settings? This cannot be undone.",
+        formatMessage({
+          id: "settings.reset.confirm",
+          defaultMessage:
+            "Are you sure you want to delete all of your Tabliss settings? This cannot be undone.",
+        }),
       )
     )
       resetStore();
@@ -44,28 +58,18 @@ const Settings: React.FC = () => {
     document.body.appendChild(input);
     input.style.display = "none";
     input.type = "file";
-    input.addEventListener("change", function () {
-      if (this.files) {
-        const file = this.files[0];
-        const reader = new FileReader();
-        reader.addEventListener("load", (event) => {
-          if (event.target && event.target.result) {
-            try {
-              const state = JSON.parse(event.target.result as string);
-              importStore(state);
-            } catch (error) {
-              alert(
-                `Invalid import file: ${
-                  error instanceof Error ? error.message : "Uknown error"
-                }`,
-              );
-            }
-          }
-        });
-        reader.readAsText(file);
+    input.accept = ".json,application/json";
+    input.addEventListener("change", async () => {
+      const file = input.files?.[0];
+      input.remove();
+      if (!file) return;
+      try {
+        importStore(JSON.parse(await file.text()));
+      } catch {
+        importError();
       }
-      document.body.removeChild(input);
     });
+    input.addEventListener("cancel", () => input.remove());
     input.click();
   };
 
@@ -84,27 +88,54 @@ const Settings: React.FC = () => {
 
         <System />
 
-        <p style={{ marginBottom: "2rem" }}>
-          <a onClick={handleImport}>Import</a>,{" "}
-          <a onClick={handleExport}>export</a> or{" "}
-          <a onClick={handleReset}>reset</a> your settings
-        </p>
-
-        <Persist />
+        <div className="Widget" style={{ textAlign: "center" }}>
+          <h4>
+            <FormattedMessage
+              id="settings.manage"
+              defaultMessage="Manage Settings"
+            />
+          </h4>
+          <p
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "0.5em",
+              justifyContent: "center",
+            }}
+          >
+            <button
+              type="button"
+              className="button button--primary"
+              onClick={handleImport}
+            >
+              <FormattedMessage id="settings.import" defaultMessage="Import" />
+            </button>
+            <button
+              type="button"
+              className="button button--primary"
+              onClick={handleExport}
+            >
+              <FormattedMessage id="settings.export" defaultMessage="Export" />
+            </button>
+            <button
+              type="button"
+              className="button button--secondary"
+              onClick={handleReset}
+            >
+              <FormattedMessage id="settings.reset" defaultMessage="Reset" />
+            </button>
+          </p>
+          <hr />
+          <Persist />
+        </div>
 
         <div style={{ textAlign: "center" }} className="Widget">
-          <h4>Support Tabliss</h4>
-          <p>
-            <a
-              href="https://www.paypal.com/donate/?hosted_button_id=FK7VRWS9A2EW4"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="button button--primary"
-              title="I do love coffee"
-            >
-              <Icon name="coffee" /> Donate a coffee 😍
-            </a>
-          </p>
+          <h4>
+            <FormattedMessage
+              id="settings.links.original"
+              defaultMessage="Original Links"
+            />
+          </h4>
           <p>
             <a href="https://tabliss.io/" target="_blank">
               <Icon name="globe" /> Website
@@ -126,14 +157,23 @@ const Settings: React.FC = () => {
               <Icon name="github" /> GitHub
             </a>
           </p>
+          <hr />
+          <h4>
+            <FormattedMessage
+              id="settings.links.custom"
+              defaultMessage="Custom Version Links"
+            />
+          </h4>
+          <p>
+            <a
+              href="https://github.com/justhuman1008/tabliss_custom"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <Icon name="github" /> GitHub
+            </a>
+          </p>
         </div>
-
-        <FormattedMessage
-          id="settings.translationCredits"
-          description="Give yourself some credit :)"
-          defaultMessage=" "
-          tagName="p"
-        />
       </div>
     </div>
   );

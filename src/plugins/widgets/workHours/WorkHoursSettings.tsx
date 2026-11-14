@@ -1,3 +1,4 @@
+import { FormattedMessage } from "react-intl";
 import React, { FC } from "react";
 
 import { Props, defaultData } from "./types";
@@ -15,7 +16,10 @@ const daysList = [
 const WorkHoursSettings: FC<Props> = ({ data = defaultData, setData }) => (
   <div className="WorkHoursSettings">
     <label>
-      Start time
+      <FormattedMessage
+        id="widget.workHours.start"
+        defaultMessage="Start time"
+      />
       <input
         type="time"
         value={data.startTime}
@@ -25,7 +29,7 @@ const WorkHoursSettings: FC<Props> = ({ data = defaultData, setData }) => (
       />
     </label>
     <label>
-      End time
+      <FormattedMessage id="widget.workHours.end" defaultMessage="End time" />
       <input
         type="time"
         value={data.endTime}
@@ -47,7 +51,10 @@ const WorkHoursSettings: FC<Props> = ({ data = defaultData, setData }) => (
               })
             }
           />
-          {day}
+          <FormattedMessage
+            id={"widget.workHours.day." + index}
+            defaultMessage={day}
+          />
         </label>
       </div>
     ))}

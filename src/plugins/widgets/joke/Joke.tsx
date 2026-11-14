@@ -1,98 +1,100 @@
-import React, { useState, useEffect } from "react";
-import { useCachedEffect } from "../../../hooks";
-import { db } from "../../../db/state";
-import { useValue } from "../../../lib/db/react";
+import React from "react";
+import { FormattedMessage, useIntl } from "react-intl";
 import { getJoke } from "./api";
-import "./Joke.sass";
 import {
   defaultData,
-  Props,
   isSingleJoke,
   isTwoPartJoke,
-  TwoPartJokeAPIResponse,
-  isJokeError,
+  Props,
+  selectedJokeCategories,
 } from "./types";
+import "./Joke.sass";
 
-const Joke: React.FC<Props> = ({
+export default function Joke({
   cache,
   data = defaultData,
   setCache,
   loader,
-}) => {
-  // Grab the user's locale
-  const locale = useValue(db, "locale");
-
-  // Map to supported language
-  const mapLocaleToJokeAPILang = (locale: string): string => {
-    const defaultLanguage = "en";
-    const supportedLanguages: string[] = ["cs", "de", "en", "es", "fr", "pt"];
-    const [lang] = locale.split("-");
-    return supportedLanguages.includes(lang) ? lang : defaultLanguage;
-  };
-
-  useCachedEffect(
-    () => {
-      loader.push();
-      const apiLocale = mapLocaleToJokeAPILang(locale);
-      getJoke(data.categories, apiLocale).then(setCache).finally(loader.pop);
-    },
-    cache?.timestamp ? cache.timestamp + data.timeout : 0,
-    [data.categories],
-  );
-
-  if (!cache) {
-    return null;
-  }
-
-  if (isJokeError(cache)) {
-    return (
-      <>
-        {cache.causedBy.map((errorMessage, index) => {
-          return <p key={index}>{errorMessage}</p>;
-        })}
-      </>
+}: Props) {
+  const locale = useIntl().locale.split("-")[0];
+  const language = ["cs", "de", "en", "es", "fr", "pt"].includes(locale)
+    ? locale
+    : "en";
+  const categories = selectedJokeCategories(data).join(",");
+  const request = categories + "?safe-mode&lang=" + language;
+  const current = cache?.request === request ? cache : undefined;
+  const [revealed, setRevealed] = React.useState<number | null>(null);
+  const nextRefresh = current
+    ? current.timestamp + (data.timeout ?? defaultData.timeout)
+    : 0;
+  React.useEffect(() => {
+    const controller = new AbortController();
+    const timer = setTimeout(
+      async () => {
+        loader.push();
+        try {
+          const result = await getJoke(request, controller.signal);
+          if (!controller.signal.aborted)
+            setCache({ request, timestamp: Date.now(), result });
+        } catch {
+          if (!controller.signal.aborted)
+            setCache({
+              request,
+              timestamp: Date.now(),
+              result: { error: true },
+            });
+        } finally {
+          loader.pop();
+        }
+      },
+      Math.max(0, nextRefresh - Date.now()),
     );
-  }
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [request, nextRefresh]);
 
-  return (
-    <div className="joke-container">
-      {isSingleJoke(cache) && <h5>{cache.joke}</h5>}
-
-      {isTwoPartJoke(cache) && <TwoPartJoke joke={cache} />}
-    </div>
-  );
-};
-
-const TwoPartJoke: React.FC<{ joke: TwoPartJokeAPIResponse }> = ({ joke }) => {
-  const isJokeAQuestion = joke.setup.slice(-1) === "?";
-  const [showAnswer, setShowAnswer] = useState(false);
-
-  useEffect(() => {
-    setShowAnswer(false);
-  }, [joke]);
-
-  if (!isJokeAQuestion) {
-    return (
-      <>
-        <h5>{joke.setup}</h5>
-        <h5>{joke.delivery}</h5>
-      </>
+  const joke = current?.result;
+  if (!joke) return null;
+  if (joke.error)
+    return React.createElement(
+      "div",
+      { className: "joke-container" },
+      React.createElement(FormattedMessage, {
+        id: "widget.joke.unavailable",
+        defaultMessage: "A joke could not be loaded.",
+      }),
     );
-  }
+  if (isSingleJoke(joke))
+    return React.createElement(
+      "div",
+      { className: "joke-container" },
+      React.createElement("h5", null, joke.joke),
+    );
+  if (!isTwoPartJoke(joke) || !current) return null;
 
-  return (
-    <>
-      <h5
-        className="question-joke-setup"
-        onClick={() => setShowAnswer(!showAnswer)}
-      >
-        {joke.setup}
-      </h5>
-      {showAnswer && (
-        <h5 className="question-joke-delivery">{joke.delivery}</h5>
-      )}
-    </>
+  const isQuestion = joke.setup.endsWith("?");
+  const shown = revealed === current.timestamp;
+  return React.createElement(
+    "div",
+    { className: "joke-container" },
+    React.createElement(
+      "h5",
+      null,
+      isQuestion
+        ? React.createElement(
+            "button",
+            {
+              type: "button",
+              className: "question-joke-setup",
+              "aria-expanded": shown,
+              onClick: () => setRevealed(shown ? null : current.timestamp),
+            },
+            joke.setup,
+          )
+        : joke.setup,
+    ),
+    (!isQuestion || shown) && React.createElement("h5", null, joke.delivery),
   );
-};
-
-export default Joke;
+}

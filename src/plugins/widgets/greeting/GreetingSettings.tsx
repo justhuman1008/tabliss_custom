@@ -1,3 +1,4 @@
+import { FormattedMessage } from "react-intl";
 import React, { FC } from "react";
 
 import { Props, defaultData } from "./types";
@@ -5,7 +6,7 @@ import { Props, defaultData } from "./types";
 const GreetingSettings: FC<Props> = ({ data = defaultData, setData }) => (
   <div className="GreetingSettings">
     <label>
-      Name
+      <FormattedMessage id="widget.display.name" defaultMessage="Name" />
       <input
         type="text"
         value={data.name}

@@ -1,3 +1,4 @@
+import { FormattedMessage } from "react-intl";
 import React, { FC } from "react";
 
 import { Props, defaultData } from "./types";
@@ -5,7 +6,7 @@ import { Props, defaultData } from "./types";
 const CssSettings: FC<Props> = ({ data = defaultData, setData }) => (
   <div className="CssSettings">
     <label>
-      CSS Snippet
+      <FormattedMessage id="widget.css.code" defaultMessage="CSS Snippet" />
       <textarea
         rows={3}
         style={{ fontFamily: "monospace" }}
@@ -15,8 +16,10 @@ const CssSettings: FC<Props> = ({ data = defaultData, setData }) => (
     </label>
 
     <p className="info">
-      Warning: this functionality is intended for advanced users. Custom styles
-      may break at any time.
+      <FormattedMessage
+        id="widget.css.warning"
+        defaultMessage="Warning: this functionality is intended for advanced users. Custom styles may break at any time."
+      />
     </p>
   </div>
 );

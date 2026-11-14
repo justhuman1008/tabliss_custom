@@ -9,6 +9,21 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 - Updated IP Info widget with a more reliable service and more frequent updates
 
+## [2.6.1] - 2026-11-14
+
+### 변경
+
+- 기본 UI 아이콘을 먼저 로드하고, 빠른 링크에서 필요한 Feather 아이콘 목록은 사용 시점에 불러옵니다.
+- 초를 표시하는 시계는 매초 갱신하고, 인사말과 날씨는 표시 데이터나 갱신 시점이 바뀔 때 업데이트합니다.
+- 기상청 위치 JSON의 공백을 제거해 원래 데이터를 유지하면서 파일 크기를 줄였습니다.
+- Browserslist의 브라우저 호환성 데이터(`caniuse-lite`)를 갱신했습니다.
+
+### 제거
+
+- Sentry 오류 전송과 관련 의존성을 제거했습니다. 위젯의 오류 안내는 새 탭에 표시됩니다.
+- 사용하지 않는 `webpack-ext-reloader`와 `dotenv`를 제거했습니다.
+- 원본의 기여 및 번역 안내 문서를 제거했습니다.
+
 ## [2.6.0] - 2022-04-25
 
 ### Added

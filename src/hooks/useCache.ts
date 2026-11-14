@@ -1,6 +1,6 @@
 import { EffectCallback, useEffect, useMemo, useRef } from "react";
 import { Cache } from "../plugins";
-import { useTime } from "./useTime";
+import { useTime, useTimeReached } from "./useTime";
 
 /**
  * A cached effect that automatically reruns after the expires time or on deps change.
@@ -10,20 +10,20 @@ export function useCachedEffect(
   expires: Date | number,
   deps: unknown[],
 ) {
-  const time = useTime("absolute");
+  const reachedExpiry = useTimeReached(Number(expires));
   const prevDeps = useRef(deps);
   const prevExpires = useRef<Date | number>();
 
   useEffect(() => {
     const depsChanged = !areDepsEqual(prevDeps.current, deps);
-    const expired = time >= expires && expires !== prevExpires.current;
+    const expired = reachedExpiry && expires !== prevExpires.current;
 
     if (depsChanged || expired) {
       prevDeps.current = deps;
       prevExpires.current = expires;
       return effect();
     }
-  }, [...deps, expires, time]);
+  }, [...deps, expires, reachedExpiry]);
 }
 
 export type RotatingCache<Item> = {

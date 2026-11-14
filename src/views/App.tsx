@@ -1,5 +1,5 @@
 import React from "react";
-import { defineMessages, useIntl } from "react-intl";
+import { defineMessages, MessageDescriptor, useIntl } from "react-intl";
 import { usePushError } from "../api";
 import { UiContext } from "../contexts/ui";
 import { migrate } from "../db/migrate";
@@ -31,8 +31,8 @@ const Root: React.FC = () => {
 
   const pushError = usePushError();
   const handleError =
-    (message: string, showError: boolean) => (error: Error) => {
-      pushError({ message });
+    (descriptor: MessageDescriptor, showError: boolean) => (error: Error) => {
+      pushError({ message: descriptor.defaultMessage as string, descriptor });
       console.error(error);
       console.error("Caused by:", error.cause);
       if (showError) setError(true);
@@ -46,14 +46,22 @@ const Root: React.FC = () => {
           Stream.subscribe(
             errors,
             handleError(
-              "Cannot save your settings. You may have hit the maximum storage capacity.",
+              {
+                id: "errors.storage.save",
+                defaultMessage:
+                  "Cannot save your settings. You may have hit the maximum storage capacity.",
+              },
               true,
             ),
           ),
         )
         .catch(
           handleError(
-            "Cannot open settings storage. Your settings cannot be loaded or saved.",
+            {
+              id: "errors.storage.open",
+              defaultMessage:
+                "Cannot open settings storage. Your settings cannot be loaded or saved.",
+            },
             true,
           ),
         ),
@@ -63,14 +71,22 @@ const Root: React.FC = () => {
           Stream.subscribe(
             errors,
             handleError(
-              "Cannot save cache. Start up performance may be degraded.",
+              {
+                id: "errors.cache.save",
+                defaultMessage:
+                  "Cannot save cache. Start up performance may be degraded.",
+              },
               false,
             ),
           ),
         )
         .catch(
           handleError(
-            "Cannot open cache. Start up performance may be degraded.",
+            {
+              id: "errors.cache.open",
+              defaultMessage:
+                "Cannot open cache. Start up performance may be degraded.",
+            },
             false,
           ),
         ),

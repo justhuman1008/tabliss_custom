@@ -1,82 +1,83 @@
 import React from "react";
-import { MINUTES, HOURS } from "../../../utils";
-
+import { FormattedMessage, useIntl } from "react-intl";
+import { MINUTES } from "../../../utils";
 import categories from "./categories";
-import { Props, defaultData, JokeAPICategory } from "./types";
+import {
+  defaultData,
+  JokeAPICategory,
+  Props,
+  selectedJokeCategories,
+} from "./types";
 
-function updateSelectedCategories(
-  existingCategories: Set<JokeAPICategory>,
-  updatedCategory: JokeAPICategory,
-  checked: boolean,
-): Set<JokeAPICategory> {
-  const isAnyCategoryChecked = updatedCategory === "any" && checked;
-  const isLastItemBeingUnchecked = !checked && existingCategories.size === 1;
+const intervals = [
+  [5, "Every 5 minutes"],
+  [15, "Every 15 minutes"],
+  [60, "Every hour"],
+  [1440, "Every day"],
+  [10080, "Every week"],
+] as const;
 
-  if (isLastItemBeingUnchecked) {
-    return existingCategories;
+export default function JokeSettings({ data = defaultData, setData }: Props) {
+  const { formatMessage } = useIntl();
+  const selected = selectedJokeCategories(data);
+  function changeCategory(category: JokeAPICategory, checked: boolean) {
+    const next =
+      category === "any" && checked
+        ? ["any" as const]
+        : checked
+          ? [...selected.filter((value) => value !== "any"), category]
+          : selected.filter((value) => value !== category);
+    setData({ ...data, categories: next.length ? next : ["any"] });
   }
-
-  if (isAnyCategoryChecked) {
-    return new Set(["any"]);
-  }
-
-  const categories = new Set(existingCategories);
-
-  categories.delete("any");
-
-  checked
-    ? categories.add(updatedCategory)
-    : categories.delete(updatedCategory);
-
-  return categories;
-}
-
-const JokeSettings: React.FC<Props> = ({ data = defaultData, setData }) => {
   return (
     <div className="JokeSettings">
-      <h5>Daily Joke</h5>
-
       <label>
-        Show a new joke
+        <FormattedMessage
+          id="widget.joke.interval"
+          defaultMessage="Show a new joke"
+        />
         <select
-          value={data.timeout}
+          value={data.timeout ?? defaultData.timeout}
           onChange={(event) =>
             setData({ ...data, timeout: Number(event.target.value) })
           }
         >
-          <option value={5 * MINUTES}>Every 5 minutes</option>
-          <option value={15 * MINUTES}>Every 15 minutes</option>
-          <option value={HOURS}>Every hour</option>
-          <option value={24 * HOURS}>Every day</option>
-          <option value={7 * 24 * HOURS}>Every week</option>
+          {intervals.map(([minutes, label]) => (
+            <option key={minutes} value={minutes * MINUTES}>
+              {formatMessage({
+                id: "widget.joke.interval." + minutes,
+                defaultMessage: label,
+              })}
+            </option>
+          ))}
         </select>
       </label>
-      <label>
-        Category
-        {categories.map((category) => {
-          return (
-            <label key={category.key}>
-              <input
-                type="checkbox"
-                checked={data.categories.has(category.key)}
-                onChange={(event) => {
-                  const categories = updateSelectedCategories(
-                    data.categories,
-                    category.key,
-                    event.target.checked,
-                  );
-
-                  setData({ ...data, categories });
-                }}
-              />{" "}
-              {category.name}
-            </label>
-          );
-        })}
-      </label>
-
+      <fieldset>
+        <legend>
+          <FormattedMessage
+            id="widget.joke.category"
+            defaultMessage="Category"
+          />
+        </legend>
+        {categories.map(({ key, name }) => (
+          <label key={key}>
+            <input
+              type="checkbox"
+              checked={selected.includes(key)}
+              onChange={(event) => changeCategory(key, event.target.checked)}
+            />{" "}
+            <FormattedMessage
+              id={"widget.joke.category." + key}
+              defaultMessage={name}
+            />
+          </label>
+        ))}
+      </fieldset>
       <p>
-        Powered by{" "}
+        <FormattedMessage
+          id="widget.joke.attribution"
+          defaultMessage="Powered by"
+        />{" "}
         <a
           href="https://jokeapi.dev/"
           target="_blank"
@@ -87,6 +88,4 @@ const JokeSettings: React.FC<Props> = ({ data = defaultData, setData }) => {
       </p>
     </div>
   );
-};
-
-export default JokeSettings;
+}

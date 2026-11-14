@@ -2,6 +2,7 @@ import React, { FC } from "react";
 import { FormattedDate } from "react-intl";
 
 import { useTime } from "../../../hooks";
+import { MINUTES, SECONDS } from "../../../utils";
 import Analogue from "./Analogue";
 import Digital from "./Digital";
 import { Props, defaultData } from "./types";
@@ -19,7 +20,10 @@ const Time: FC<Props> = ({ data = defaultData }) => {
     timeZone,
     showDayPeriod = true,
   } = data;
-  let time = useTime(timeZone ? "absolute" : "zoned");
+  let time = useTime(
+    timeZone ? "absolute" : "zoned",
+    showSeconds ? SECONDS : MINUTES,
+  );
 
   if (timeZone) {
     time = utcToZonedTime(time, timeZone);

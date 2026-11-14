@@ -1,3 +1,4 @@
+import { FormattedMessage } from "react-intl";
 import React from "react";
 import { WidgetPosition } from "../../db/state";
 import { Icon, IconButton } from "../shared";
@@ -49,7 +50,12 @@ type Props = {
 
 const PositionInput: React.FC<Props> = ({ value, onChange }) => (
   <div className="PositionInput">
-    <label>Position</label>
+    <label>
+      <FormattedMessage
+        id="widget.display.position"
+        defaultMessage="Position"
+      />
+    </label>
 
     <div className="grid">
       {positions.map((position) => (

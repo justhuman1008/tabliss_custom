@@ -7,6 +7,9 @@
         margin: 0.25em
         white-space: nowrap
 
+        &[hidden]
+            display: none
+
         &:hover
             text-decoration: none
 
@@ -14,5 +17,9 @@
             .LinkText
                 text-decoration: underline
 
-        img
+        > i > img, > i > svg
+            width: 1em
             height: 1em
+
+        > i > img
+            object-fit: contain

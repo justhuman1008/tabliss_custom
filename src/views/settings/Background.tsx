@@ -1,5 +1,5 @@
 import React from "react";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import { setBackground } from "../../db/action";
 import { BackgroundDisplay, db } from "../../db/state";
 import { useKey } from "../../lib/db/react";
@@ -10,6 +10,9 @@ import ToggleSection from "../shared/ToggleSection";
 const Background: React.FC = () => {
   const [data, setData] = useKey(db, "background");
 
+  const { formatMessage } = useIntl();
+  const backgroundName = ({ key, name }: { key: string; name: string }) =>
+    formatMessage({ id: key + ".name", defaultMessage: name });
   const plugin = getConfig(data.key);
 
   const setBackgroundDisplay = (display: BackgroundDisplay): void => {
@@ -34,7 +37,7 @@ const Background: React.FC = () => {
         >
           {backgroundConfigs.map((plugin) => (
             <option key={plugin.key} value={plugin.key}>
-              {plugin.name}
+              {backgroundName(plugin)}
             </option>
           ))}
         </select>
@@ -42,7 +45,7 @@ const Background: React.FC = () => {
 
       {plugin && (
         <div className="Widget">
-          <h4>{plugin.name}</h4>
+          <h4>{backgroundName(plugin)}</h4>
 
           {plugin.settingsComponent && (
             <div className="settings">
@@ -51,10 +54,14 @@ const Background: React.FC = () => {
           )}
 
           {plugin.supportsBackdrop && (
-            <ToggleSection name="Display Settings">
+            <ToggleSection name="Display Settings" messageId="settings.display">
               <>
                 <label>
-                  Blur <br />
+                  <FormattedMessage
+                    id="background.display.blur"
+                    defaultMessage="Blur"
+                  />{" "}
+                  <br />
                   <input
                     type="range"
                     list="blur-markers"
@@ -75,7 +82,11 @@ const Background: React.FC = () => {
                 </label>
 
                 <label>
-                  Luminosity <br />
+                  <FormattedMessage
+                    id="background.display.luminosity"
+                    defaultMessage="Luminosity"
+                  />{" "}
+                  <br />
                   <input
                     type="range"
                     list="luminosity-markers"
@@ -90,9 +101,21 @@ const Background: React.FC = () => {
                     }
                   />
                   <datalist id="luminosity-markers">
-                    <option value="-1" label="Darken" />
+                    <option
+                      value="-1"
+                      label={formatMessage({
+                        id: "background.display.darken",
+                        defaultMessage: "Darken",
+                      })}
+                    />
                     <option value="0" />
-                    <option value="1" label="Lighten" />
+                    <option
+                      value="1"
+                      label={formatMessage({
+                        id: "background.display.lighten",
+                        defaultMessage: "Lighten",
+                      })}
+                    />
                   </datalist>
                 </label>
               </>

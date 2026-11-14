@@ -47,34 +47,50 @@ export type JokeApiErrorResponse = {
 };
 
 export function isSingleJoke(
-  joke: JokeAPIResponse,
+  joke: Cache["result"],
 ): joke is SingleJokeAPIResponse {
   return !joke.error && (joke as SingleJokeAPIResponse).type === "single";
 }
 
 export function isTwoPartJoke(
-  joke: JokeAPIResponse,
+  joke: Cache["result"],
 ): joke is TwoPartJokeAPIResponse {
   return !joke.error && (joke as TwoPartJokeAPIResponse).type === "twopart";
 }
 
 export function isJokeError(
-  joke: JokeAPIResponse,
+  joke: Cache["result"],
 ): joke is JokeApiErrorResponse {
   return joke.error;
 }
 
 export type JokeAPICategory = (typeof categories)[number]["key"];
 export type Data = {
-  categories: Set<JokeAPICategory>;
+  categories: JokeAPICategory[];
   timeout: number;
 };
 
-export type Cache = JokeAPIResponse;
+export type Cache = {
+  request: string;
+  timestamp: number;
+  result: JokeAPIResponse | { error: true };
+};
 
 export type Props = API<Data, Cache>;
 
 export const defaultData: Data = {
-  categories: new Set(["any"]),
+  categories: ["any"],
   timeout: 5 * MINUTES,
 };
+
+export function selectedJokeCategories(data: Data): JokeAPICategory[] {
+  const selected = Array.isArray(data.categories)
+    ? data.categories
+    : (data.categories as unknown) instanceof Set
+      ? [...(data.categories as unknown as Set<JokeAPICategory>)]
+      : [];
+  const valid = selected.filter((key) =>
+    categories.some((category) => category.key === key),
+  );
+  return !valid.length || valid.includes("any") ? ["any"] : valid;
+}

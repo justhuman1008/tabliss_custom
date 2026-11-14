@@ -9,6 +9,8 @@ export type Data = {
 
 export type Props = API<Data>;
 
+export const todoShortcut = (data?: Data): string => data?.keyBind ?? "T";
+
 export const defaultData: Data = {
   items: [],
   show: 3,

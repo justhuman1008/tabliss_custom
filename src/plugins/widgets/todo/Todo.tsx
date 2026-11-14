@@ -5,7 +5,7 @@ import { DownIcon, Icon, UpIcon, ExpandIcon } from "../../../views/shared";
 import { addTodo, removeTodo, toggleTodo, updateTodo } from "./actions";
 import { reducer, State } from "./reducer";
 import TodoList from "./TodoList";
-import { defaultData, Props } from "./types";
+import { defaultData, Props, todoShortcut } from "./types";
 
 const Todo: FC<Props> = ({ data = defaultData, setData }) => {
   const [showCompleted, toggleShowCompleted] = useToggle();
@@ -17,7 +17,7 @@ const Todo: FC<Props> = ({ data = defaultData, setData }) => {
   const items = data.items.filter((item) => !item.completed || showCompleted);
   const show = !showMore ? data.show : undefined;
 
-  const keyBind = data.keyBind ?? "T";
+  const keyBind = todoShortcut(data);
   useKeyPress(
     (event: KeyboardEvent) => {
       event.preventDefault();

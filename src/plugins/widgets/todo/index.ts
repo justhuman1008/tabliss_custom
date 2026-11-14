@@ -4,7 +4,7 @@ import TodoSettings from "./TodoSettings";
 
 const config: Config = {
   key: "widget/todo",
-  name: "Todos",
+  name: "TODO",
   description: "Add reminders to procrastinate.",
   dashboardComponent: Todo,
   settingsComponent: TodoSettings,

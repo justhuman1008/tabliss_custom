@@ -3,6 +3,7 @@ import { API } from "../../types";
 export type Link = {
   name?: string;
   icon?: string;
+  iconImageUrl?: string;
   url: string;
 };
 

@@ -7,6 +7,7 @@ import { defaultLocale } from "../locales";
 export interface State {
   /** Background state */
   background: BackgroundState;
+  "background/image-link/last-url"?: string;
   /** Widget state */
   [key: `widget/${string}`]: WidgetState | null;
   /** Plugin data */

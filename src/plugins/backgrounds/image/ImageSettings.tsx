@@ -1,3 +1,4 @@
+import { FormattedMessage, useIntl } from "react-intl";
 import React from "react";
 import { useObjectUrls } from "../../../hooks";
 import { IconButton, RemoveIcon } from "../../../views/shared";
@@ -5,6 +6,7 @@ import "./ImageSettings.sass";
 import { defaultCache, Props } from "./types";
 
 const ImageSettings: React.FC<Props> = ({ cache = defaultCache, setCache }) => {
+  const { formatMessage } = useIntl();
   const urls = useObjectUrls(cache);
 
   const addImages = (files: FileList) =>
@@ -35,7 +37,10 @@ const ImageSettings: React.FC<Props> = ({ cache = defaultCache, setCache }) => {
               <img src={url} />
               <IconButton
                 onClick={() => removeImage(index)}
-                title="Remove image"
+                title={formatMessage({
+                  id: "background/image.remove",
+                  defaultMessage: "Remove image",
+                })}
               >
                 <RemoveIcon />
               </IconButton>
@@ -44,10 +49,20 @@ const ImageSettings: React.FC<Props> = ({ cache = defaultCache, setCache }) => {
       </div>
 
       {largeImages && (
-        <p className="info">Large images may affect performance.</p>
+        <p className="info">
+          <FormattedMessage
+            id="background/image.largeImage"
+            defaultMessage="Large images may affect performance."
+          />
+        </p>
       )}
 
-      <p className="info">Images do not sync between devices.</p>
+      <p className="info">
+        <FormattedMessage
+          id="background/image.noSync"
+          defaultMessage="Images do not sync between devices."
+        />
+      </p>
     </div>
   );
 };

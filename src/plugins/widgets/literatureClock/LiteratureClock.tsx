@@ -1,6 +1,7 @@
 import React, { FC, useEffect } from "react";
 
 import { useTime } from "../../../hooks";
+import { MINUTES } from "../../../utils";
 import { getTimeCode, getQuoteByTimeCode } from "./api";
 import { Props, defaultData } from "./types";
 import "./LiteratureClock.sass";
@@ -10,7 +11,7 @@ const LiteratureClock: FC<Props> = ({
   data = defaultData,
   setCache,
 }) => {
-  const time = useTime();
+  const time = useTime("zoned", MINUTES);
   const timeCode = getTimeCode(time);
 
   useEffect(() => {

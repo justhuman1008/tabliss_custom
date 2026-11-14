@@ -1,5 +1,6 @@
 import React, { FC } from "react";
 
+import { useIntl } from "react-intl";
 import { useKeyPress, useToggle } from "../../../hooks";
 import { Icon } from "../../../views/shared";
 import Display from "./Display";
@@ -7,6 +8,7 @@ import { Props, defaultData } from "./types";
 import "./Links.sass";
 
 const Links: FC<Props> = ({ data = defaultData }) => {
+  const { formatMessage } = useIntl();
   const [visible, toggleVisible] = useToggle();
 
   useKeyPress(
@@ -40,7 +42,13 @@ const Links: FC<Props> = ({ data = defaultData }) => {
           />
         ))
       ) : (
-        <a onClick={toggleVisible} title="Show quick links">
+        <a
+          onClick={toggleVisible}
+          title={formatMessage({
+            id: "widget.links.show",
+            defaultMessage: "Show quick links",
+          })}
+        >
           <Icon name="link-2" />
         </a>
       )}

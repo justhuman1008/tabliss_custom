@@ -1,3 +1,4 @@
+import { FormattedMessage } from "react-intl";
 import React from "react";
 import { useCachedEffect } from "../../../hooks";
 import { HOURS } from "../../../utils";
@@ -15,7 +16,9 @@ const Quote: React.FC<Props> = ({
 }) => {
   useCachedEffect(
     () => {
-      getQuote(loader, data.category ?? "inspire").then(setCache);
+      getQuote(loader, data.category ?? "inspire")
+        .then(setCache)
+        .catch(() => {});
     },
     cache ? cache.timestamp + EXPIRE_IN : 0,
     [data.category],
@@ -25,10 +28,25 @@ const Quote: React.FC<Props> = ({
     return null;
   }
 
+  const text =
+    cache.quote === "Too many requests this hour." ? (
+      <FormattedMessage
+        id="widget.quote.error.rateLimit"
+        defaultMessage={cache.quote}
+      />
+    ) : cache.quote === "Unable to get a new developer excuse." ? (
+      <FormattedMessage
+        id="widget.quote.error.developerExcuses"
+        defaultMessage={cache.quote}
+      />
+    ) : (
+      cache.quote
+    );
+  if (!text) return null;
   return (
     <div className="Quote">
       <h4 className="QuoteContent">
-        “{cache.quote}”
+        “{text}”
         {cache.author && (
           <sub>
             <br />

@@ -1,4 +1,5 @@
 import React from "react";
+import type { MessageDescriptor } from "react-intl";
 
 type ErrorAPI = {
   errors: ErrorItem[];
@@ -7,6 +8,7 @@ type ErrorAPI = {
 
 type ErrorItem = {
   message: string;
+  descriptor?: MessageDescriptor;
 };
 
 type ErrorState = {

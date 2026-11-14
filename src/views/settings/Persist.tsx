@@ -1,38 +1,85 @@
 import React from "react";
+import { FormattedMessage } from "react-intl";
 
 const Persist: React.FC = () => {
-  const [error, setError] = React.useState(false);
-  const [persisted, setPersisted] = React.useState(true); // Hide until we know otherwise
+  const [status, setStatus] = React.useState("checking");
 
   React.useEffect(() => {
-    if (navigator.storage) navigator.storage.persisted().then(setPersisted);
+    let active = true;
+    async function check() {
+      try {
+        const granted =
+          BUILD_TARGET !== "web" &&
+          (await browser.permissions.contains({
+            permissions: ["unlimitedStorage"],
+          }));
+        if (granted || (await navigator.storage.persisted())) {
+          if (active) setStatus("enabled");
+          return;
+        }
+      } catch {}
+      if (active) setStatus("ready");
+    }
+    void check();
+    return () => {
+      active = false;
+    };
   }, []);
 
-  if (persisted) return null;
-
-  const handleClick = () => {
-    navigator.storage
-      .persist()
-      .then((persisted) =>
-        persisted ? setPersisted(persisted) : setError(true),
-      );
-  };
+  async function enable() {
+    setStatus("pending");
+    try {
+      setStatus((await navigator.storage.persist()) ? "enabled" : "failure");
+    } catch {
+      setStatus("failure");
+    }
+  }
 
   return (
-    <div className="Widget" style={{ textAlign: "center" }}>
-      <h4>Persist Settings</h4>
-      <p>
-        Would you like Tabliss to ask your browser to save your setting
-        permanently?
-      </p>
-      {error ? (
-        <p>Could not persist settings at this time.</p>
+    <>
+      <h4>
+        <FormattedMessage
+          id="settings.persist"
+          defaultMessage="Persist Settings"
+        />
+      </h4>
+      {status === "enabled" ? (
+        <p role="status">
+          <FormattedMessage
+            id="settings.persist.enabled"
+            defaultMessage="Storage protection is on."
+          />
+        </p>
       ) : (
-        <button className="button button--primary" onClick={handleClick}>
-          Persist Settings
-        </button>
+        <>
+          <p>
+            <FormattedMessage
+              id="settings.persist.description"
+              defaultMessage="Ask your browser to protect Tabliss data from automatic deletion when storage is low."
+            />
+          </p>
+          {status === "failure" && (
+            <p role="status">
+              <FormattedMessage
+                id="settings.persist.failure"
+                defaultMessage="Could not enable storage protection. You can try again."
+              />
+            </p>
+          )}
+          <button
+            type="button"
+            className="button button--primary"
+            disabled={status === "checking" || status === "pending"}
+            onClick={enable}
+          >
+            <FormattedMessage
+              id="settings.persist"
+              defaultMessage="Persist Settings"
+            />
+          </button>
+        </>
       )}
-    </div>
+    </>
   );
 };
 

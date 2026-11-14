@@ -1,5 +1,3 @@
-require("dotenv/config");
-
 const path = require("path");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
@@ -11,7 +9,45 @@ const webpack = require("webpack");
 const buildTarget = process.env.BUILD_TARGET || "web";
 const isProduction = process.env.NODE_ENV === "production";
 const isWeb = buildTarget === "web";
-const version = require("./package.json").version;
+const featherIcons = require("feather-icons/dist/icons.json");
+const uiIcons = [
+  "alert-triangle",
+  "arrow-down",
+  "arrow-down-left",
+  "arrow-down-right",
+  "arrow-left",
+  "arrow-right",
+  "arrow-up",
+  "arrow-up-left",
+  "arrow-up-right",
+  "check",
+  "check-circle",
+  "circle",
+  "cloud",
+  "cloud-lightning",
+  "cloud-rain",
+  "cloud-snow",
+  "edit",
+  "eye",
+  "eye-off",
+  "github",
+  "globe",
+  "link-2",
+  "maximize-2",
+  "minimize-2",
+  "minus",
+  "move",
+  "navigation",
+  "pause",
+  "play",
+  "plus",
+  "search",
+  "settings",
+  "sun",
+  "trash-2",
+  "twitter",
+  "zap",
+];
 
 const config = {
   entry: {
@@ -62,6 +98,10 @@ const config = {
       patterns: [
         { from: "target/shared" },
         {
+          from: require.resolve("feather-icons/LICENSE"),
+          to: "feather-icons.LICENSE.txt",
+        },
+        {
           from: `target/${buildTarget}`,
           filter: (path) => !path.includes("index.html"),
         },
@@ -76,7 +116,9 @@ const config = {
     new webpack.DefinePlugin({
       BUILD_TARGET: JSON.stringify(buildTarget),
       DEV: JSON.stringify(!isProduction),
-      VERSION: JSON.stringify(version),
+      UI_ICONS: JSON.stringify(
+        Object.fromEntries(uiIcons.map((name) => [name, featherIcons[name]])),
+      ),
     }),
   ],
   devtool: isWeb || !isProduction ? "source-map" : false,

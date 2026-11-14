@@ -1,3 +1,4 @@
+import { normalizeLocale } from "../../locales/locales";
 import * as DB from "./db";
 import * as Stream from "./stream";
 
@@ -97,9 +98,23 @@ export const extension = async (
     .then((stored) =>
       Object.keys(stored)
         .filter((key) => key.startsWith(name))
-        .forEach((key) =>
-          DB.put(db, key.substring(name.length + 1), stored[key]),
-        ),
+        .forEach((storageKey) => {
+          const key = storageKey.substring(name.length + 1);
+          const value = stored[storageKey];
+          if (
+            name === "tabliss/config" &&
+            key.startsWith("widget/") &&
+            value?.key === "widget/nba"
+          )
+            return;
+          DB.put(
+            db,
+            key,
+            name === "tabliss/config" && key === "locale"
+              ? normalizeLocale(value)
+              : value,
+          );
+        }),
     )
     .catch((error) => {
       throw mapError("Cannot read from storage", error);

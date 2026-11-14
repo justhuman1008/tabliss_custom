@@ -1,9 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "Tabliss - A Beautiful New Tab",
-  "short_name": "Tabliss",
-  "version": "2.6.0",
-  "description": "A beautiful New Tab page with many customisable backgrounds and widgets that does not require any permissions.",
+  "name": "Tabliss Custom",
+  "short_name": "Tabliss Custom",
+  "version": "2.6.1",
+  "default_locale": "en",
+  "description": "__MSG_extensionDescription__",
   "chrome_url_overrides": {
     "newtab": "index.html"
   },
@@ -13,6 +14,6 @@
     "96": "icons/96.png",
     "128": "icons/128.png"
   },
-  "permissions": ["storage"],
+  "permissions": ["storage", "unlimitedStorage"],
   "optional_host_permissions": ["https://apis.data.go.kr/*"]
 }

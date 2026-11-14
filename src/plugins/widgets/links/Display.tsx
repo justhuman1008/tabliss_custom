@@ -1,17 +1,9 @@
 import React, { FC, useMemo } from "react";
 import { defineMessages, useIntl } from "react-intl";
 
+import { getRemoteImageUrl } from "../../../remoteImageUrl";
 import { Icon } from "../../../views/shared";
 import { Link } from "./types";
-
-const displayUrl = (url: string): string => {
-  try {
-    const parsed = new URL(url);
-    return parsed.hostname + (parsed.pathname !== "/" ? parsed.pathname : "");
-  } catch (e) {
-    return url;
-  }
-};
 
 const getDomain = (url: string): string | null => {
   try {
@@ -37,7 +29,14 @@ const messages = defineMessages({
 
 type Props = Link & { number: number; linkOpenStyle: boolean };
 
-const Display: FC<Props> = ({ icon, name, number, url, linkOpenStyle }) => {
+const Display: FC<Props> = ({
+  icon,
+  name,
+  number,
+  url,
+  linkOpenStyle,
+  iconImageUrl,
+}) => {
   const intl = useIntl();
 
   const title = useMemo(
@@ -49,6 +48,22 @@ const Display: FC<Props> = ({ icon, name, number, url, linkOpenStyle }) => {
   );
 
   const domain = useMemo(() => getDomain(url), [url]);
+
+  if (!icon) return null;
+  if (icon === "_image") {
+    const imageUrl = getRemoteImageUrl(iconImageUrl);
+    return imageUrl ? (
+      <QuickLinkImage
+        key={imageUrl}
+        imageUrl={imageUrl}
+        imageAlt={name ? "" : domain ?? url}
+        name={name}
+        url={url}
+        target={linkOpenStyle ? "_blank" : "_self"}
+        title={title}
+      />
+    ) : null;
+  }
 
   return (
     <a
@@ -62,7 +77,11 @@ const Display: FC<Props> = ({ icon, name, number, url, linkOpenStyle }) => {
           <i>
             <img
               alt={domain}
-              src={`https://icons.duckduckgo.com/ip3/${domain}.ico`}
+              src={
+                "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,URL&url=https://" +
+                encodeURIComponent(domain) +
+                "&size=32"
+              }
             />
           </i>
         ) : null
@@ -70,12 +89,55 @@ const Display: FC<Props> = ({ icon, name, number, url, linkOpenStyle }) => {
         <Icon name={icon} />
       ) : null}
       {icon && name && " "}
-      <span className="LinkText">
-        {name}
-        {!name && !icon && displayUrl(url)}
-      </span>
+      <span className="LinkText">{name}</span>
     </a>
   );
 };
+
+function QuickLinkImage({
+  imageUrl,
+  imageAlt,
+  name,
+  url,
+  target,
+  title,
+}: {
+  imageUrl: string;
+  imageAlt: string;
+  name?: string;
+  url: string;
+  target: string;
+  title: string;
+}) {
+  const [status, setStatus] = React.useState<"loading" | "ready" | "failed">(
+    "loading",
+  );
+  if (status === "failed") return null;
+  return (
+    <a
+      href={url}
+      rel="noopener noreferrer"
+      target={target}
+      title={title}
+      hidden={status === "loading"}
+    >
+      <i>
+        <img
+          src={imageUrl}
+          alt={imageAlt}
+          onLoad={() => setStatus("ready")}
+          onError={() => setStatus("failed")}
+          referrerPolicy="no-referrer"
+        />
+      </i>
+      {name && (
+        <>
+          {" "}
+          <span className="LinkText">{name}</span>
+        </>
+      )}
+    </a>
+  );
+}
 
 export default Display;

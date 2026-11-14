@@ -1,3 +1,4 @@
+import { FormattedMessage, useIntl } from "react-intl";
 import React from "react";
 import { ErrorContext } from "../../contexts/error";
 import Modal from "./modal/Modal";
@@ -7,6 +8,7 @@ type Props = {
 };
 
 const Errors: React.FC<Props> = ({ onClose }) => {
+  const { formatMessage } = useIntl();
   const { errors } = React.useContext(ErrorContext);
   return (
     <Modal onClose={onClose}>
@@ -18,12 +20,17 @@ const Errors: React.FC<Props> = ({ onClose }) => {
           rel="noopener noreferrer"
           style={{ float: "right", fontSize: "1.1em" }}
         >
-          Visit support
+          <FormattedMessage
+            id="errors.support"
+            defaultMessage="Visit support"
+          />
         </a>
-        <h2 style={{ margin: 0 }}>Errors</h2>
+        <h2 style={{ margin: 0 }}>
+          <FormattedMessage id="errors.title" defaultMessage="Errors" />
+        </h2>
         {errors.map((error, index) => (
           <div key={index} className="Widget">
-            {error.message}
+            {error.descriptor ? formatMessage(error.descriptor) : error.message}
           </div>
         ))}
       </div>

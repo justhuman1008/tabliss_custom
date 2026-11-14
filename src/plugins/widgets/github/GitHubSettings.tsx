@@ -1,3 +1,4 @@
+import { FormattedMessage } from "react-intl";
 import React from "react";
 import { DebounceInput } from "../../shared";
 import { defaultData, Props } from "./types";
@@ -5,7 +6,10 @@ import { defaultData, Props } from "./types";
 const GitHubSettings: React.FC<Props> = ({ data = defaultData, setData }) => (
   <div className="MessageSettings">
     <label>
-      GitHub Username
+      <FormattedMessage
+        id="widget.github.username"
+        defaultMessage="GitHub Username"
+      />
       <DebounceInput
         type="text"
         value={data.username}

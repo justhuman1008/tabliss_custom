@@ -1,5 +1,5 @@
 import React from "react";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import { addWidget, removeWidget, reorderWidget } from "../../db/action";
 import { selectWidgets } from "../../db/select";
 import { db } from "../../db/state";
@@ -8,6 +8,7 @@ import { widgetConfigs } from "../../plugins";
 import Widget from "./Widget";
 
 const Widgets: React.FC = () => {
+  const { formatMessage } = useIntl();
   const widgets = useSelector(db, selectWidgets);
 
   return (
@@ -27,11 +28,17 @@ const Widgets: React.FC = () => {
           className="primary"
         >
           <option disabled value="">
-            Add a new widget
+            <FormattedMessage
+              id="settings.addWidget"
+              defaultMessage="Add a new widget"
+            />
           </option>
           {widgetConfigs.map((plugin) => (
             <option key={plugin.key} value={plugin.key}>
-              {plugin.name}
+              {formatMessage({
+                id: plugin.key + ".name",
+                defaultMessage: plugin.name,
+              })}
             </option>
           ))}
         </select>

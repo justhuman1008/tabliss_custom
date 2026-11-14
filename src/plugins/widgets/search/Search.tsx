@@ -7,7 +7,7 @@ import { Props, defaultData } from "./types";
 import { buildUrl, getSearchUrl, getSuggestUrl } from "./utils";
 import "./Search.sass";
 
-const messages = defineMessages({
+export const messages = defineMessages({
   placeholder: {
     id: "plugins.search.placeholder",
     description: "Placeholder text to show in the search box before typing",
@@ -24,8 +24,8 @@ const Search: FC<Props> = ({ data = defaultData }) => {
 
   const intl = useIntl();
   const placeholder = useMemo(
-    () => intl.formatMessage(messages.placeholder),
-    [intl],
+    () => data.placeholderText ?? intl.formatMessage(messages.placeholder),
+    [intl, data.placeholderText],
   );
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
