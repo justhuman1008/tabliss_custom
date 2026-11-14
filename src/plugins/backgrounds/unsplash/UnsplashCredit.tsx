@@ -23,21 +23,28 @@ const UnsplashCredit: React.FC<Props> = ({
 }) => (
   <div className="credit">
     <div className="photo">
-      <a href={credit.imageLink + UTM} rel="noopener noreferrer">
-        <FormattedMessage
-          id="plugins.unsplash.photoLink"
-          description="Photo link text"
-          defaultMessage="Photo"
-        />
-      </a>
-      {", "}
-      <a href={credit.userLink + UTM} rel="noopener noreferrer">
-        {credit.userName}
-      </a>
-      {", "}
-      <a href={"https://unsplash.com/" + UTM} rel="noopener noreferrer">
-        Unsplash
-      </a>
+      <FormattedMessage
+        id="plugins.unsplash.attribution"
+        defaultMessage="<photo>Photo</photo>, <author>{name}</author>, <provider>Unsplash</provider>"
+        values={{
+          name: credit.userName,
+          photo: (chunks) => (
+            <a href={credit.imageLink + UTM} rel="noopener noreferrer">
+              {chunks}
+            </a>
+          ),
+          author: (chunks) => (
+            <a href={credit.userLink + UTM} rel="noopener noreferrer">
+              {chunks}
+            </a>
+          ),
+          provider: (chunks) => (
+            <a href={"https://unsplash.com/" + UTM} rel="noopener noreferrer">
+              {chunks}
+            </a>
+          ),
+        }}
+      />
     </div>
 
     <div className="controls">

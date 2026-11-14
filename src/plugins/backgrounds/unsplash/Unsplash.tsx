@@ -1,95 +1,131 @@
 import React from "react";
-import { useRotatingCache } from "../../../hooks";
+import { useTimeReached } from "../../../hooks";
+import { useLocalCredential } from "../../../hooks/useLocalCredential";
 import Backdrop from "../../../views/shared/Backdrop";
+import {
+  backgroundApiFailure,
+  clearBackgroundError,
+  Credential,
+  unsplashKeyStorage,
+} from "../BackgroundApiKey";
 import { buildLink, fetchImages } from "./api";
 import { defaultData, Props } from "./types";
-import "./Unsplash.sass";
 import UnsplashCredit from "./UnsplashCredit";
+import "./Unsplash.sass";
 
-const Unsplash: React.FC<Props> = ({
+export default function UnsplashBackground(props: Props) {
+  const credential = useLocalCredential<Credential>(unsplashKeyStorage);
+  const { data = defaultData, setData } = props;
+  React.useEffect(() => {
+    if (data.timeout === Number.MAX_SAFE_INTEGER)
+      setData({ ...data, paused: true, timeout: defaultData.timeout });
+  }, []);
+  return credential
+    ? React.createElement(UnsplashPhotos, {
+        ...props,
+        credential,
+        key: credential.revision,
+      })
+    : React.createElement("div", { className: "Image default fullscreen" });
+}
+
+function UnsplashPhotos({
   cache,
   data = defaultData,
   loader,
   setCache,
   setData,
-}) => {
-  // If legacy cache design, clear and let the new cache take over
-  // Unfortunately, without the image src being stored, I cannot migrate the old cache
-  if (cache && "now" in cache) {
-    cache = undefined;
-  }
-
-  // Migrate old pause setting
-  React.useEffect(() => {
-    if (data.timeout === Number.MAX_SAFE_INTEGER) {
-      setData({
-        ...data,
-        paused: true,
-        timeout: defaultData.timeout,
-      });
-    }
-  }, []);
-
-  // Get current item from rotating cache
-  const item = useRotatingCache(
-    () => {
-      loader.push();
-      return fetchImages(data).finally(loader.pop);
-    },
-    { cache, setCache },
-    data.paused ? Number.MAX_SAFE_INTEGER : data.timeout * 1000,
-    [data.by, data.collections, data.featured, data.search, data.topics],
+  credential,
+}: Props & { credential: Credential }) {
+  const { by, collections, featured, search, topics, paused, timeout } = data;
+  const query = JSON.stringify([by, collections, featured, search, topics]);
+  const photos =
+    cache?.revision === credential.revision && cache.query === query
+      ? cache
+      : undefined;
+  const entered = React.useRef(true);
+  const interval = (timeout ?? defaultData.timeout) * 1000;
+  const rotationDue = useTimeReached(
+    photos && !paused && interval > 0 && photos.cursor < photos.items.length - 1
+      ? photos.rotated + interval
+      : Infinity,
   );
 
-  // Populate browser cache with the next image
   React.useEffect(() => {
-    if (cache && cache.items[cache.cursor + 1]) {
-      const next = new Image();
-      next.src = buildLink(cache.items[cache.cursor + 1].src);
-      next.onload = loader.pop;
-      next.onerror = loader.pop;
-      loader.push();
+    if (!photos) return;
+    if (
+      photos.cursor < photos.items.length - 1 &&
+      !paused &&
+      ((interval === 0 && entered.current) || rotationDue)
+    ) {
+      setCache({ ...photos, cursor: photos.cursor + 1, rotated: Date.now() });
     }
-  }, [cache]);
+    entered.current = false;
+  }, [photos, rotationDue, interval, paused]);
 
-  const url = item ? buildLink(item.src) : null;
-
-  const go = (amount: number) =>
-    cache && cache.items[cache.cursor + amount]
-      ? () =>
-          setCache({
-            ...cache!,
-            cursor: cache!.cursor + amount,
+  const cursor = photos?.cursor ?? 0;
+  const needsPhotos = !photos || cursor === photos.items.length - 1;
+  React.useEffect(() => {
+    if (!needsPhotos) return;
+    clearBackgroundError(unsplashKeyStorage);
+    const controller = new AbortController();
+    const { signal } = controller;
+    loader.push();
+    fetchImages(data, credential.value, signal)
+      .then((items) => {
+        if (signal.aborted) return;
+        setCache((previous) => {
+          if (
+            photos &&
+            previous?.revision === credential.revision &&
+            previous.query === query
+          ) {
+            const keep = Math.max(0, previous.cursor - 9);
+            return {
+              ...previous,
+              cursor: previous.cursor - keep,
+              items: [...previous.items.slice(keep), ...items],
+            };
+          }
+          entered.current = false;
+          return {
+            revision: credential.revision,
+            query,
+            items,
+            cursor: 0,
             rotated: Date.now(),
-          })
+          };
+        });
+      })
+      .catch((error) => {
+        if (!signal.aborted) backgroundApiFailure(unsplashKeyStorage, error);
+      })
+      .finally(loader.pop);
+    return () => controller.abort();
+  }, [query, needsPhotos, cursor]);
+
+  const photo = photos?.items[cursor];
+  const url = photo ? buildLink(photo.src) : undefined;
+  const move = (step: number) =>
+    photos?.items[cursor + step]
+      ? () =>
+          setCache({ ...photos, cursor: cursor + step, rotated: Date.now() })
       : null;
-
-  const handlePause = () => {
-    setData({
-      ...data,
-      paused: !data.paused,
-    });
-  };
-
-  return (
-    <div className="Unsplash fullscreen">
-      <Backdrop
-        className="image fullscreen"
-        ready={url !== null}
-        style={{ backgroundImage: url ? `url(${url})` : undefined }}
-      />
-
-      {item ? (
-        <UnsplashCredit
-          credit={item.credit}
-          paused={data.paused ?? false}
-          onPause={handlePause}
-          onPrev={go(-1)}
-          onNext={go(1)}
-        />
-      ) : null}
-    </div>
+  return React.createElement(
+    "div",
+    { className: "Unsplash fullscreen" },
+    React.createElement(Backdrop, {
+      className: "image fullscreen",
+      ready: Boolean(url),
+      style: { backgroundImage: url ? `url(${url})` : undefined },
+    }),
+    photo &&
+      React.createElement(UnsplashCredit, {
+        credit: photo.credit,
+        paused: paused ?? false,
+        onPause: () => setData({ ...data, paused: !paused }),
+        onPrev: move(-1),
+        onNext: move(1),
+      }),
   );
-};
-
-export default Unsplash;
+}

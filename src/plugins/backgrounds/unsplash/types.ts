@@ -23,7 +23,10 @@ export interface Image {
   };
 }
 
-type Cache = RotatingCache<Image>;
+type Cache = Omit<RotatingCache<Image>, "deps"> & {
+  revision?: string;
+  query?: string;
+};
 
 export type Props = API<Data, Cache>;
 

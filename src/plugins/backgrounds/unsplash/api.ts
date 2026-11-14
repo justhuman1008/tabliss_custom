@@ -1,3 +1,10 @@
+import { readBackgroundResponse } from "../apiResponse";
+type UnsplashPhoto = {
+  urls: { raw: string };
+  links: { html: string };
+  location?: { name?: string; title?: string };
+  user: { name: string; links: { html: string } };
+};
 import { Data, Image } from "./types";
 
 export const officialCollection = 1053828;
@@ -7,17 +14,15 @@ type Config = Pick<
   "by" | "collections" | "featured" | "search" | "topics"
 >;
 
-export const fetchImages = async ({
-  by,
-  collections,
-  topics,
-  featured,
-  search,
-}: Config): Promise<Image[]> => {
+export const fetchImages = async (
+  { by, collections, topics, featured, search }: Config,
+  key: string,
+  signal: AbortSignal,
+): Promise<Image[]> => {
   const url = "https://api.unsplash.com/photos/random";
   const params = new URLSearchParams();
   const headers = new Headers({
-    Authorization: `Client-ID ${UNSPLASH_API_KEY}`,
+    Authorization: `Client-ID ${key}`,
   });
 
   params.set("count", "10");
@@ -42,16 +47,20 @@ export const fetchImages = async ({
       params.set("collections", String(officialCollection));
   }
 
-  const res = await fetch(`${url}?${params}`, { headers, cache: "no-cache" });
-  const body = await res.json();
+  const res = await fetch(`${url}?${params}`, {
+    headers,
+    signal,
+    cache: "no-cache",
+  });
+  const body = await readBackgroundResponse<UnsplashPhoto[]>(res);
+  if (!Array.isArray(body) || !body.length)
+    throw new Error("Unsplash returned no photos");
 
-  // TODO: validate types
-
-  return body.map((item: any) => ({
+  return body.map((item) => ({
     src: item.urls.raw,
     credit: {
       imageLink: item.links.html,
-      location: item.location ? item.location.name : null,
+      location: item.location?.name ?? item.location?.title ?? undefined,
       userName: item.user.name,
       userLink: item.user.links.html,
     },

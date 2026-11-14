@@ -1,6 +1,7 @@
-import { useContext } from "react";
+import { useCallback, useContext } from "react";
 import { UiContext } from "../contexts/ui";
 import { cache as cacheDb, db } from "../db/state";
+import { DB } from "../lib";
 import { useKey } from "../lib/db/react";
 import { API } from "../plugins";
 
@@ -8,7 +9,17 @@ import { API } from "../plugins";
 //       the entire object for every plugin
 export function useApi(id: string): API {
   // Cache
-  const [cache, setCache] = useKey(cacheDb, id);
+  const [cache] = useKey(cacheDb, id);
+  const setCache = useCallback(
+    (value: unknown) => {
+      DB.put(
+        cacheDb,
+        id,
+        typeof value === "function" ? value(DB.get(cacheDb, id)) : value,
+      );
+    },
+    [id],
+  );
 
   // Data
   const [data, setData] = useKey(db, `data/${id}`);

@@ -1,33 +1,28 @@
-import { API } from "../../types";
-import { Gif } from "./types";
-
-type Config = {
-  tag: string;
-  nsfw: boolean;
-};
-
+import { readBackgroundResponse } from "../apiResponse";
+import type { Data } from "./types";
 export async function getGif(
-  { tag, nsfw }: Config,
-  loader: API["loader"],
-): Promise<Gif> {
-  const tags = tag.split(",").map((t) => t.trim());
-  const randomTag = tags[Math.floor(Math.random() * tags.length)];
-
-  const request = new Request(
-    "https://api.giphy.com/v1/gifs/random" +
-      `?api_key=${GIPHY_API_KEY}` +
-      "&rating=" +
-      (nsfw ? "r" : "g") +
-      (randomTag ? `&tag=${encodeURIComponent(randomTag)}` : ""),
+  { tag, nsfw }: Pick<Data, "tag" | "nsfw">,
+  apiKey: string,
+  signal: AbortSignal,
+) {
+  const tags = tag.split(",").map((value) => value.trim());
+  const selected = tags[Math.floor(Math.random() * tags.length)];
+  const params = new URLSearchParams({
+    api_key: apiKey,
+    rating: nsfw ? "r" : "g",
+  });
+  if (selected) params.set("tag", selected);
+  const response = await fetch(
+    "https://api.giphy.com/v1/gifs/random?" + params,
+    { signal, cache: "no-store" },
   );
-
-  loader.push();
-  const res = await (await fetch(request)).json();
-  const data = await (await fetch(res.data.images.original.webp)).blob();
-  loader.pop();
-
-  return {
-    data,
-    link: res.data.url,
-  };
+  const { data } = await readBackgroundResponse<{
+    data?: {
+      images?: { original?: { webp?: string; url?: string } };
+      url?: string;
+    };
+  }>(response);
+  const url = data?.images?.original?.webp || data?.images?.original?.url;
+  if (!url) throw new Error("GIPHY returned no image");
+  return { url, link: data?.url };
 }

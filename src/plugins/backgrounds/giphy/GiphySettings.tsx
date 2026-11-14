@@ -1,3 +1,5 @@
+import { FormattedMessage } from "react-intl";
+import BackgroundApiKeySettings, { giphyKeyStorage } from "../BackgroundApiKey";
 import React, { FC } from "react";
 
 import { Props, defaultData } from "./types";
@@ -5,8 +7,9 @@ import { DebounceInput } from "../../shared";
 
 const GiphySettings: FC<Props> = ({ data = defaultData, setData }) => (
   <div className="GiphySettings">
+    <BackgroundApiKeySettings storageKey={giphyKeyStorage} />
     <label>
-      Tag
+      <FormattedMessage id="background/giphy.tag" defaultMessage="Tag" />
       <DebounceInput
         type="text"
         value={data.tag}
@@ -14,7 +17,12 @@ const GiphySettings: FC<Props> = ({ data = defaultData, setData }) => (
         wait={500}
       />
     </label>
-    <p className="info">Separate multiple tags with a comma</p>
+    <p className="info">
+      <FormattedMessage
+        id="background/giphy.tagHint"
+        defaultMessage="Separate multiple tags with a comma"
+      />
+    </p>
 
     <label>
       <input
@@ -22,7 +30,10 @@ const GiphySettings: FC<Props> = ({ data = defaultData, setData }) => (
         checked={data.expand}
         onChange={(event) => setData({ ...data, expand: !data.expand })}
       />{" "}
-      Stretch to fill screen
+      <FormattedMessage
+        id="background/giphy.expand"
+        defaultMessage="Stretch to fill screen"
+      />
     </label>
 
     <label>
@@ -31,7 +42,10 @@ const GiphySettings: FC<Props> = ({ data = defaultData, setData }) => (
         checked={!data.nsfw}
         onChange={(event) => setData({ ...data, nsfw: !data.nsfw })}
       />{" "}
-      Safe Search
+      <FormattedMessage
+        id="background/giphy.safeSearch"
+        defaultMessage="Safe Search"
+      />
     </label>
   </div>
 );
